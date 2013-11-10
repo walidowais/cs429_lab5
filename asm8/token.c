@@ -8,6 +8,8 @@
 #include "asm8.h"
 #include "token.h"
 
+Boolean is_valid_digit(char c, int base);
+
 /* ***************************************************************** */
 /*                                                                   */
 /*                                                                   */
@@ -93,7 +95,7 @@ enum Token_type peek_token_type(void)
 {
     /* skip any leading spaces */
     while ((token_index < input_line_length) 
-           && (isspace(input_buffer[token_index]) || (input_buffer[token_index] == ','))
+           && (isspace(input_buffer[token_index]) || ((input_buffer[token_index] == ',') && (is_valid_digit(input_buffer[token_index + 1], 10))))
            ) token_index += 1;
     /* check for an empty line */
     if (token_index >= input_line_length)  return(Tillegal);

@@ -21,6 +21,8 @@
    has a bit (defined/not defined).
 */
 
+char get_size(int i);
+
 INST     memory[4096];
 Boolean defined[4096];
 Address entry_point = 0;
@@ -64,16 +66,67 @@ INST Fetch_Object_Code(Address addr)
     return(inst);
 }
 
-
 void Output_Object_Code(void)
 {
-    fprintf(output, "EP: %03X\n", entry_point);
-    int i;
-    for (i = 0; i < 4096; i++)
-        {
-            if (defined[i])
-                fprintf(output, "%03X: %03X\n", i, memory[i]);
+    int i, k;
+    short ep1, ep2;
+    int m1, m2;
+    int size;
+    short b1, b2;
+
+    fputc('O', output);
+    fputc('B', output);
+    fputc('J', output);
+    fputc('8', output);
+
+    m1 = 0xFC0;
+    m2 = 0x03F;
+
+    ep1 = ((entry_point & m1) >> 6) & m2;
+    fputc(ep1, output);
+    ep2 = entry_point & m2;
+    fputc(ep2, output);
+
+    for(i = 0; i < 4096; i++){
+        if(defined[i]){
+            size = get_size(i);
+            size = size & 0xFF;
+            fputc(size, output);
+            size -= 3;
+
+            b1 = ((i & m1) >> 6) & m2;
+            fputc(b1, output);
+            b2 = i & m2;
+            fputc(b2, output);
+
+            k = 0;
+            while((k < size) && (k < 256)){
+                b1 = ((memory[i] & m1) >> 6) & m2;
+                fputc(b1, output);
+                b2 = memory[i] & m2;
+                fputc(b2, output);
+
+                if(k < 256){
+                    i++;
+                }
+                k += 2;
+            }
         }
+    }
+
 }
 
+char get_size(int i){
+    char count = 3;
 
+    while(defined[i] && (count < 256)){
+        if((count + 2) >= 256){
+            return count;
+        }
+
+        count += 2;
+        i++;
+    }
+
+    return count;
+}
